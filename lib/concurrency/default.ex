@@ -3,15 +3,19 @@ defmodule Concurrency.Default do
 
   @urls HttpUtil.getUrlList
 
-  def singleHttpGet() do
+  def single_start do
     @urls |> Enum.map(&HttpUtil.fetchHttpStatus(&1))
   end
 
-  def conCurrentHttpGet(pids, urls)
+  def start do
+    Enum.count(@urls) |> start_links |> conCurrentHttpGet(@urls)
+  end
 
-  def conCurrentHttpGet([], _) do end
+  defp conCurrentHttpGet(pids, urls)
 
-  def conCurrentHttpGet([pid|other_pids], [url|other_url]) do
+  defp conCurrentHttpGet([], _) do end
+
+  defp conCurrentHttpGet([pid|other_pids], [url|other_url]) do
     GenServer.cast(pid, {:http_fetch, url})
     conCurrentHttpGet(other_pids, other_url)
   end
@@ -20,9 +24,11 @@ defmodule Concurrency.Default do
     {:noreply, HttpUtil.fetchHttpStatus(url)}
   end
 
-  def start_links(0, lists), do: lists
+  defp start_links(count, lists \\ [])
 
-  def start_links(count, lists \\ []) do
+  defp start_links(0, lists), do: lists
+
+  defp start_links(count, lists) do
     {:ok, pid} = GenServer.start_link(__MODULE__, nil)
     start_links(count - 1, lists ++ [pid])
   end
