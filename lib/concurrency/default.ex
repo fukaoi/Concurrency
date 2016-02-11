@@ -2,14 +2,12 @@ defmodule Concurrency.Default do
   use GenServer
 
   @urls HttpUtil.getUrlList
-  @call_or_call ""
 
   def single_start do
     @urls |> Enum.map(&HttpUtil.fetchHttpStatus(&1))
   end
 
-  def start(call_or_call \\ "call") do
-    @call_or_call = "call"
+  def start do
     Enum.count(@urls) |> start_links |> conCurrentHttpGet(@urls)
   end
 
@@ -18,10 +16,7 @@ defmodule Concurrency.Default do
   defp conCurrentHttpGet([], _) do end
 
   defp conCurrentHttpGet([pid|other_pids], [url|other_url]) do
-    case @call_or_call do
-      "call" -> GenServer.call(pid, {:fetch_sync, url})
-      "cast" -> GenServer.cast(pid, {:fetch_async, url})
-    end
+    GenServer.cast(pid, {:fetch_async, url})
     conCurrentHttpGet(other_pids, other_url)
   end
 
